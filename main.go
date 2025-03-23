@@ -81,7 +81,7 @@ func calculateTotalSize(path string) (float64, error) {
 		if err != nil {
 			return err
 		}
-		// Ajouter la taille de chaque fichier ou répertoire
+
 		totalSize += float64(info.Size())
 		return nil
 	})
