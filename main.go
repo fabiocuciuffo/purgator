@@ -40,10 +40,11 @@ func main() {
 			return nil
 		}
 
-		TOTAL_SIZE, err = calculateTotalSize(path)
+		currentSize, err := calculateTotalSize(path)
 		if err != nil {
 			log.Fatal(err)
 		}
+		TOTAL_SIZE += currentSize
 
 		err = os.RemoveAll(path)
 		if err != nil {
