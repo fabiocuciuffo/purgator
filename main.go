@@ -6,7 +6,10 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 )
+
+var TIME_START = time.Now().UnixMilli()
 
 var DIRECTORIES_TO_DELETE = []string{
 	"node_modules",
@@ -16,6 +19,8 @@ var DIRECTORIES_TO_DELETE = []string{
 var NO_DELETE bool = true
 
 var TOTAL_SIZE float64 = 0
+
+var TIME_ELPASED float64 = 0
 
 func main() {
 	dir, err := os.Getwd()
@@ -61,7 +66,8 @@ func main() {
 	if NO_DELETE {
 		fmt.Println("\033[33mAucun répertoire supprimé.\033[0m")
 	} else {
-		fmt.Printf("\033[32mTaille totale: %.2f Mo\033[0m\n\n", TOTAL_SIZE/(1024*1024))
+		TIME_ELPASED = float64(time.Now().UnixMilli()-TIME_START) / 1000
+		fmt.Printf("\033[32mEspace libéré %.2fMo en %.3fs\033[0m", TOTAL_SIZE/(1024*1024), TIME_ELPASED)
 	}
 }
 
