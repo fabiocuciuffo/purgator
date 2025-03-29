@@ -26,20 +26,27 @@ var TOTAL_SIZE float64 = 0
 var TIME_ELPASED float64 = 0
 
 func main() {
-	var dir string
-	args := os.Args[1:2]
-
-	if string(args[0][0]) == "-" {
-		dir, _ = os.Getwd()
-	} else {
-		dir = args[0]
-
-	}
-
-	exec(dir)
-	printExecLogs()
 	printMem := flag.Bool("print-mem", false, "bool print memory")
 	flag.Parse()
+	var dir string
+	args := os.Args[1:]
+	for i, v := range args {
+		if string(v[0]) == "-" {
+			args = slices.Delete(args, i, i+1)
+		}
+	}
+	if len(args) > 1 {
+		log.Fatal("One argument expected only.")
+		os.Exit(1)
+	}
+	if len(args) == 1 {
+		dir = args[0]
+	} else {
+		dir, _ = os.Getwd()
+	}
+	exec(dir)
+	printExecLogs()
+
 	if *printMem {
 		printMemUsage()
 	}
