@@ -30,11 +30,13 @@ func main() {
 	flag.Parse()
 	var dir string
 	args := os.Args[1:]
+	var tmpArgs []string
 	for i, v := range args {
 		if string(v[0]) == "-" {
-			args = slices.Delete(args, i, i+1)
+			tmpArgs = append(args[:i], args[i+1:]...)
 		}
 	}
+	args = tmpArgs
 	if len(args) > 1 {
 		log.Fatal("One argument expected only.")
 		os.Exit(1)
