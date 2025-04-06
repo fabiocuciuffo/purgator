@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+	"sync"
 	"time"
 )
 
@@ -24,6 +25,10 @@ var NO_DELETE bool = true
 var TOTAL_SIZE float64 = 0
 
 var TIME_ELPASED float64 = 0
+
+var m = sync.Mutex{}
+
+var wg = sync.WaitGroup{}
 
 func main() {
 	printMem := flag.Bool("print-mem", false, "bool print memory")
@@ -47,6 +52,9 @@ func main() {
 		dir, _ = os.Getwd()
 	}
 	exec(dir)
+
+	wg.Wait()
+
 	printExecLogs()
 
 	if *printMem {
@@ -56,6 +64,9 @@ func main() {
 
 func exec(basePath string) {
 	fsys := os.DirFS(basePath)
+
+	var pathsToProcess []string
+
 	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			log.Fatal(err)
@@ -69,32 +80,45 @@ func exec(basePath string) {
 			return nil
 		}
 
+		fullPath := path
 		if string(basePath[len(basePath)-1]) == "/" {
-			path = basePath + path
+			fullPath = basePath + path
 		} else {
-			path = basePath + "/" + path
+			fullPath = basePath + "/" + path
 		}
 
-		currentSize, err := calculateTotalSize(path)
-		if err != nil {
-			log.Fatal(err)
-			os.Exit(1)
-		}
-
-		TOTAL_SIZE += currentSize
-
-		err = os.RemoveAll(path)
-		if err != nil {
-			log.Fatal(err)
-			os.Exit(1)
-		}
-
-		NO_DELETE = false
-
-		fmt.Printf("\033[36m%s a été supprimé\033[0m\n", path)
+		pathsToProcess = append(pathsToProcess, fullPath)
 
 		return fs.SkipDir
 	})
+
+	for _, path := range pathsToProcess {
+		wg.Add(1)
+		go processDirectory(path)
+	}
+}
+
+func processDirectory(path string) {
+	defer wg.Done()
+
+	currentSize, err := calculateTotalSize(path)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+
+	m.Lock()
+	TOTAL_SIZE += currentSize
+	NO_DELETE = false
+	m.Unlock()
+
+	err = os.RemoveAll(path)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("\033[36m%s a été supprimé\033[0m\n", path)
 }
 
 func printExecLogs() {
